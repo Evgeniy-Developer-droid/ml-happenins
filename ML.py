@@ -1,45 +1,51 @@
 import pandas as pd
+from loguru import logger
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-df = pd.read_csv("users_action.csv")
-features = ['Country', 'City', 'UserAgeGroup', 'Distance',
-       'Category', 'SubCategory1', 'SubCategory2', 'SubCategory3',
-       'TargetAgeGroup']
-def combine_features(row):
-    result = ''
-    for key in features:
-        result += str(row[key])+" "
-    return result
+logger.add('logs/logs.log', level='DEBUG', rotation="500 MB")
 
-for feature in features:
-    df[feature] = df[feature].fillna('')
-df["combined_features"] = df.apply(combine_features,axis=1)
+class ML:
 
-df['index'] = range(0, len(df))
+    def __init__(self, df_action, df_event):
+        self.df_action = df_action
+        self.df_event = df_event
+        self.features = ['country', 'city', 'category', 'subcategory1',
+                'subcategory2', 'subcategory3', 'target_age_group']
 
-cv = CountVectorizer()
-count_matrix = cv.fit_transform(df["combined_features"])
-
-cosine_sim = cosine_similarity(count_matrix)
-
-def find_title_from_index(index):
-    return df[df.index == index]
-def find_index_from_title(title):
-    return df[df.Category == title]["index"].values[0]
+    def combine_features(self, row):
+        result = ''
+        for key in self.features:
+            result += str(row[key]) + " "
+        return result
 
 
-movie = "Food"
-movie_index = find_index_from_title(movie)
+    def get_events(self):
+        result = []
 
-similar_movies = list(enumerate(cosine_sim[movie_index]))
+        for feature in self.features:
+            # self.df_action[feature] = self.df_action[feature].fillna('')
+            self.df_event[feature] = self.df_event[feature].fillna('')
+        self.df_event["combined_features"] = self.df_event.apply(self.combine_features, axis=1)
+        # self.df_action["combined_features"] = self.df_action.apply(self.combine_features, axis=1)
 
-sorted_similar_movies = sorted(similar_movies,key=lambda x:x[1],reverse=True)[1:]
+        cv = CountVectorizer()
+        try:
+            count_matrix = cv.fit_transform(self.df_event["combined_features"])
+        except ValueError as e:
+            logger.warning(e)
+            return []
+        cosine_sim = cosine_similarity(count_matrix)
+        for action in self.df_action.to_dict('records'):
+            event_index = self.df_event.loc[self.df_event['event_id'] == action['event_id']].event_id
+            similar_events = list(enumerate(cosine_sim[int(event_index)]))
 
-i=0
-for element in sorted_similar_movies:
-    print(find_title_from_index(element[0]))
-    i=i+1
-    if i>10:
-        break
-# print(movie_index)
+            sorted_similar_events = sorted(similar_events, key=lambda x: x[1], reverse=True)[1:]
+
+            i = 0
+            for element in sorted_similar_events:
+                result.append(element[0])
+                i = i + 1
+                if i > 1:
+                    break
+        return result

@@ -1,0 +1,4 @@
+2021-05-13 13:19:16.894 | WARNING  | main:<module>:20 - (1045, "Access denied for user 'oot'@'localhost' (using password: YES)")
+2021-05-13 13:19:16.894 | WARNING  | main:<module>:20 - (1045, "Access denied for user 'oot'@'localhost' (using password: YES)")
+2021-05-13 13:40:19.218 | WARNING  | main:get_events_by_user:40 - Execution failed on sql 'SELECT * FROM users_actios WHERE user_id = 1 AND id>0 ORDER BY id DESC LIMIT 5': (1146, "Table 'happenin.users_actios' doesn't exist")
+2021-05-13 13:40:19.218 | WARNING  | main:get_events_by_user:40 - Execution failed on sql 'SELECT * FROM users_actios WHERE user_id = 1 AND id>0 ORDER BY id DESC LIMIT 5': (1146, "Table 'happenin.users_actios' doesn't exist")
