@@ -37,14 +37,17 @@ class ML:
             return []
         cosine_sim = cosine_similarity(count_matrix)
         for action in self.df_action.to_dict('records'):
-            event_index = self.df_event.loc[self.df_event['event_id'] == action['event_id']].event_id
-            similar_events = list(enumerate(cosine_sim[int(event_index)]))
+            event_index = self.df_event.loc[self.df_event['event_id'] == action['event_id']].index
+            if event_index.empty:
+                continue
+
+            similar_events = list(enumerate(cosine_sim[event_index[0]]))
 
             sorted_similar_events = sorted(similar_events, key=lambda x: x[1], reverse=True)[1:]
 
             i = 0
             for element in sorted_similar_events:
-                result.append(element[0])
+                result.append(self.df_event.loc[element[0]].event_id)
                 i = i + 1
                 if i > 1:
                     break

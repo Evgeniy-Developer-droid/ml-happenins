@@ -31,11 +31,33 @@ def index():
 @app.route('/api/get-events-by-user')
 def get_events_by_user():
     user_id = request.args.get('user_id')
+    range = request.args.get('range')
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
     if not user_id:
         return jsonify([])
     try:
         last_rows_user = pd.read_sql_query("SELECT * FROM users_actions WHERE user_id = "+user_id+" AND id>0 ORDER BY id DESC LIMIT 5", conn)
-        events_all = pd.read_sql_query("SELECT * FROM event_data WHERE (event_type IN ('DAILY', 'WEEKLY', 'MON_FRI', 'SAT_SUN') OR (event_type = 'ONE_TIME' AND start_time >= NOW())) AND is_canceled = 0 AND deleted = 0", conn)
+        query = """SELECT * FROM event_data WHERE (event_type IN ('DAILY', 'WEEKLY', 'MON_FRI', 'SAT_SUN') OR (event_type = 'ONE_TIME' AND start_time >= NOW())) AND is_canceled = 0 AND deleted = 0 AND (
+                                6371 * acos(
+                                  cos(
+                                    radians("""+lat+""")
+                                  ) * cos(
+                                    radians(latitude)
+                                  ) * cos(
+                                    radians(longitude) - radians("""+lon+""")
+                                  ) + sin(
+                                    radians("""+lat+""")
+                                  ) * sin(
+                                    radians(latitude)
+                                  )
+                                )
+                              )* 1000 < """+range
+        # print(query)
+        events_all = pd.read_sql_query(query, conn)
+        if events_all.empty:
+            return jsonify({"events_ids": []})
+        # print(events_all)
     except pd.io.sql.DatabaseError as e:
         logger.warning(e)
         return jsonify({'error': "sql query error"})
