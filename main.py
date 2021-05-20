@@ -38,7 +38,7 @@ def get_events_by_user():
         return jsonify([])
     try:
         last_rows_user = pd.read_sql_query("SELECT * FROM users_actions WHERE user_id = '"+user_id+"' AND id>0 ORDER BY id DESC LIMIT 5", conn)
-        query = """SELECT * FROM event_data WHERE (event_type IN ('DAILY', 'WEEKLY', 'MON_FRI', 'SAT_SUN') OR (event_type = 'ONE_TIME' AND start_time >= NOW())) AND is_canceled = 0 AND deleted = 0 AND (
+        query = """SELECT * FROM event_data WHERE (event_type IN ('DAILY', 'WEEKLY', 'MON_FRI', 'SAT_SUN') OR (event_type = 'ONE_TIME')) AND end_time >= NOW() AND is_canceled = 0 AND deleted = 0 AND (
                                 6371 * acos(
                                   cos(
                                     radians("""+lat+""")
