@@ -65,7 +65,7 @@ def get_events_by_user():
                               )* 1000 < """+range
         # print(query)
         events_all = pd.read_sql_query(query, conn)
-        print(events_all)
+        # print(events_all)
         if events_all.empty:
             return jsonify({"events_ids": []})
     except pd.io.sql.DatabaseError as e:
