@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 from ML import ML
 from loguru import logger
+import datetime
 
 logger.add('logs/logs.log', level='DEBUG', rotation="500 MB")
 
@@ -37,8 +38,17 @@ def get_events_by_user():
     if not user_id:
         return jsonify([])
     try:
-        last_rows_user = pd.read_sql_query("SELECT * FROM users_actions WHERE user_id = '"+user_id+"' AND id>0 ORDER BY id DESC LIMIT 5", conn)
-        query = """SELECT * FROM event_data WHERE (event_type IN ('DAILY', 'WEEKLY', 'MON_FRI', 'SAT_SUN') OR (event_type = 'ONE_TIME')) AND end_time >= NOW() AND is_canceled = 0 AND deleted = 0 AND (
+        last_rows_user = pd.read_sql_query("SELECT * FROM users_actions WHERE user_id = '"+user_id+"' AND id>0 AND action != 0 ORDER BY id DESC LIMIT 5", conn)
+        x = datetime.datetime.now()
+        query = """SELECT * FROM event_data WHERE (((DATE_FORMAT(NOW(), '%H:%i:%s')
+                              BETWEEN DATE_SUB(STR_TO_DATE(start_time, '%H:%i:%s'), INTERVAL 1 HOUR) and STR_TO_DATE(end_time, '%H:%i:%s'))
+                              and """+x.strftime("%A").lower()+"""= 1) OR ((DATE_FORMAT(NOW(), '%H:%i:%s') > DATE_SUB(STR_TO_DATE(start_time, '%H:%i:%s'),
+                              INTERVAL 1 HOUR) and DATE_FORMAT(NOW(), '%H:%i:%s') < DATE_ADD(STR_TO_DATE(end_time, '%H:%i:%s'), INTERVAL 24 HOUR))
+                              and """+x.strftime("%A").lower()+""" = 1) OR ((DATE_FORMAT(NOW(), '%H:%i:%s') < DATE_SUB(STR_TO_DATE(start_time, '%H:%i:%s'),
+                              INTERVAL 1 HOUR) and DATE_FORMAT(NOW(), '%H:%i:%s') < STR_TO_DATE(end_time, '%H:%i:%s')
+                              and STR_TO_DATE(start_time, '%H:%i:%s') > STR_TO_DATE(end_time, '%H:%i:%s')) and """+x.strftime("%A").lower()+""" = 1)
+                              OR (NOW() BETWEEN DATE_SUB(STR_TO_DATE(start_time, '%Y-%m-%d %H:%i:%s'), INTERVAL 1 HOUR)
+                              and STR_TO_DATE(end_time, '%Y-%m-%d %H:%i:%s')) and event_type = 'ONE_TIME') AND is_canceled = 0 AND deleted = 0 AND (
                                 6371 * acos(
                                   cos(
                                     radians("""+lat+""")
