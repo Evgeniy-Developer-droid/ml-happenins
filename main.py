@@ -12,11 +12,11 @@ logger.add('logs/logs.log', level='DEBUG', rotation="500 MB")
 path = Path(__file__).parent.absolute()
 
 try:
-    tunnel = SSHTunnelForwarder(('142.93.144.14', 22), ssh_password='uYnTUQ4dWLtJaPvK', ssh_username='root',
+    tunnel = SSHTunnelForwarder(('*******', 22), ssh_password='******', ssh_username='*****',
                                 ssh_pkey=str(path)+'/id_rsa',
                                 remote_bind_address=('127.0.0.1', 3306))
     tunnel.start()
-    conn = pymysql.connect(host='127.0.0.1', user='root', database='happenin', passwd='Eg482zetkxNNZDSP', port=tunnel.local_bind_port)
+    conn = pymysql.connect(host='127.0.0.1', user='root', database='********', passwd='***********', port=tunnel.local_bind_port)
 except pymysql.Error as e:
     logger.warning(e)
 
